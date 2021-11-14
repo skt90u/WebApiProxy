@@ -17,10 +17,17 @@
     public interface IDoStuff
     {
         AddResult Calculate(AddArgument arg);
+        int Add(int a, int b);
+        void Echo();
     }
 
     public class DoStuff : IDoStuff
     {
+        public int Add(int a, int b)
+        {
+            return a + b;
+        }
+
         public AddResult Calculate(AddArgument arg)
         {
             return new AddResult
@@ -30,6 +37,11 @@
                 mul = arg.value1 * arg.value2,
                 div = arg.value1 / arg.value2,
             };
+        }
+
+        public void Echo()
+        {
+            var a = 0;
         }
     }
 }

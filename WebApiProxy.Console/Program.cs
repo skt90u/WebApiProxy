@@ -7,21 +7,20 @@ namespace WebApiProxy.Console
     {
         static void Main(string[] args)
         {
-            for(var i=0; i<10000; i++)
+            for(var i=0; i<1; i++)
             {
                 try
                 {
                     IWebApiProxy<IDoStuff> proxy = new WebApiProxy<IDoStuff>();
                     var instance = proxy.Instance;
-                    var result = instance.Calculate(new AddArgument { value1 = 1, value2 = 2 });
-                    System.Console.WriteLine(result.add);
-                    System.Console.WriteLine(result.sub);
-                    System.Console.WriteLine(result.mul);
-                    System.Console.WriteLine(result.div);
+
+                    //System.Console.WriteLine(instance.Calculate(new AddArgument { value1 = 1, value2 = 2 }));
+                    System.Console.WriteLine(instance.Add(5, 10));
+                    //instance.Echo();
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
-                    System.Console.WriteLine($"{i} {ex.Message}");
+                    System.Console.WriteLine($"{ex.ToString()}");
                 }
             }
         }

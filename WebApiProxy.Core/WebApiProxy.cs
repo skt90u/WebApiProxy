@@ -1,8 +1,10 @@
 ﻿using ImpromptuInterface;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using RestSharp;
 using System;
 using System.Dynamic;
+using System.Linq;
 
 namespace WebApiProxy.Core
 {
@@ -33,8 +35,6 @@ namespace WebApiProxy.Core
             }
         }
 
-        
-
         public class WebApiClient : DynamicObject
         {
             private readonly Type interfaceType;
@@ -46,41 +46,66 @@ namespace WebApiProxy.Core
 
             public override bool TryInvokeMember(InvokeMemberBinder binder, object[] args, out object result)
             {
-                try
+                var methodInfo = interfaceType.GetMethod(binder.Name);
+                var parameterInfos = methodInfo.GetParameters();
+                var baseUrl = "http://localhost:44327/";
+                var resource = WebApiProxyRouteHandler.GetRouteUrl(interfaceType.Name, methodInfo.Name);
+                var client = new RestClient(baseUrl);
+                var request = new RestRequest(resource, Method.POST, DataFormat.Json);
+
+                if (args.Length != 0)
                 {
-                    var methodInfo = interfaceType.GetMethod(binder.Name);
-                    var parameters = methodInfo.GetParameters();
-                    var baseUrl = "http://localhost:44327/";
-                    var resource = WebApiProxyRouteHandler.GetRouteUrl(interfaceType.Name, methodInfo.Name);
+                    var postData = parameterInfos.Zip(args, (parameterInfo, arg) => new { key = parameterInfo.Name, val = arg }).ToDictionary(x => x.key, x => x.val);
+                    request.AddJsonBody(postData);
+                }
 
-                    var client = new RestClient(baseUrl);
-                    var request = new RestRequest(resource, Method.POST, DataFormat.Json);
+                var response = client.Execute(request);
 
-                    if (args.Length != 0)
-                    {
-                        // Web Api 目前只允許一筆參數，多筆參數傳遞過去需要使用一下方式
-                        // https://newbedev.com/pass-multiple-parameters-in-a-post-api-without-using-a-dto-class-in-net-core-mvc
+                if (response.StatusCode != System.Net.HttpStatusCode.OK)
+                {
+                    var jsonInput = response.Content;
+                    var jObj = JObject.Parse(jsonInput);
+                    var Message = jObj["Message"]?.Value<string>();
+                    var StackTrace = jObj["StackTrace"]?.Value<string>();
 
-                        request.AddJsonBody(args[0]);
+                    if (!string.IsNullOrEmpty(Message) && !string.IsNullOrEmpty(StackTrace))
+                        throw new WebApiProxyException(Message, StackTrace);
 
-                        //var postData = parameters.Zip(args, (parameter, arg) => new { key = parameter.Name, val = arg })
-                        //                     .ToDictionary(x => x.key, x => x.val);
-                        //request.AddJsonBody(postData);
-                    }
+                    throw new Exception(response.Content);
+                }
 
-                    IRestResponse response = client.Execute(request);
-
+                if (typeof(void).Equals(methodInfo.ReturnType))
+                    result = null;
+                else
                     result = JsonConvert.DeserializeObject(response.Content, methodInfo.ReturnType);
 
-                    return true;
-                }
-                catch
-                {
-                    result = null;
-                    return false;
-                }
+                return true;
             }
         }
     
+    }
+
+    public class WebApiProxyException : Exception
+    {
+        private string oldStackTrace;
+
+        public WebApiProxyException(string message, string stackTrace) : base(message)
+        {
+            this.oldStackTrace = stackTrace;
+        }
+
+
+        public override string StackTrace
+        {
+            get
+            {
+                return this.oldStackTrace;
+            }
+        }
+
+        public override string ToString()
+        {
+            return Message + "\r\n" + StackTrace;
+        }
     }
 }
