@@ -7,7 +7,7 @@ namespace WebApiProxy.Console
     {
         static void Main(string[] args)
         {
-            for(var i=0; i<1; i++)
+            for(var i=0; i<10000; i++)
             {
                 try
                 {
@@ -15,7 +15,7 @@ namespace WebApiProxy.Console
                     var instance = proxy.Instance;
 
                     //System.Console.WriteLine(instance.Calculate(new AddArgument { value1 = 1, value2 = 2 }));
-                    System.Console.WriteLine(instance.Add(5, 10));
+                    System.Console.WriteLine($"{i} -> {instance.Add(5, 10)}");
                     //instance.Echo();
                 }
                 catch (Exception ex)
