@@ -33,6 +33,8 @@ namespace WebApiProxy.Core
             }
         }
 
+        
+
         public class WebApiClient : DynamicObject
         {
             private readonly Type interfaceType;
@@ -49,7 +51,7 @@ namespace WebApiProxy.Core
                     var methodInfo = interfaceType.GetMethod(binder.Name);
                     var parameters = methodInfo.GetParameters();
                     var baseUrl = "http://localhost:44327/";
-                    var resource = WebApiProxyHandler.GetRouteUrl(interfaceType.Name, methodInfo.Name);
+                    var resource = WebApiProxyRouteHandler.GetRouteUrl(interfaceType.Name, methodInfo.Name);
 
                     var client = new RestClient(baseUrl);
                     var request = new RestRequest(resource, Method.POST, DataFormat.Json);
@@ -79,5 +81,6 @@ namespace WebApiProxy.Core
                 }
             }
         }
+    
     }
 }

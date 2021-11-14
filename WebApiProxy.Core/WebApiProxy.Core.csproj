@@ -57,6 +57,7 @@
     <Compile Include="DoStuff.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WebApiProxy.cs" />
+    <Compile Include="WebApiProxyHandler.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
